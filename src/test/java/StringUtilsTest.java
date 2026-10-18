@@ -3,6 +3,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.StringUtil;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class StringUtilsTest {
 
@@ -53,6 +54,11 @@ public class StringUtilsTest {
     @Test
     void shouldContainsExactWords(){
         assertThat(StringUtils.splitWords("Salam ana Nouhaila")).containsExactly("Salam","ana","Nouhaila");
+    }
+
+    @Test
+    void shouldHandleNullValues(){
+        assertThatThrownBy(()->StringUtils.reverse(null)).isInstanceOf(NullPointerException.class).hasMessage("Null argument !");
     }
 
 

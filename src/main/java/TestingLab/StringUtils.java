@@ -5,6 +5,9 @@ import java.util.List;
 
 public class StringUtils {
     public static String reverse(String text){
+        if(text==null){
+            throw new NullPointerException("Null argument !");
+        }
         return new StringBuilder(text).reverse().toString();
     }
 

@@ -1,7 +1,12 @@
 import TestingLab.Calculator;
+import TestingLab.StringUtils;
+import org.assertj.core.data.Percentage;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class CalculatorTest {
 
@@ -35,6 +40,32 @@ public class CalculatorTest {
         int result=calculator.subtract(5,-9);
         assertThat(result).isEqualTo(14);
     }
+
+    @Test
+    void shouldThrowException(){
+
+        assertThatThrownBy(()->calculator.divide(4,0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Can't divide by 0");
+    }
+
+
+    @Test
+    void shouldDivideDecimals(){
+        double result=calculator.divide(1,3);
+        assertThat(result).isCloseTo(0.333, Percentage.withPercentage(0.5));
+    }
+
+    @Test
+    void shouldDivideNega(){
+        double result=calculator.divide(-2,4);
+        assertThat(result).isEqualTo(-0.5);
+    }
+
+
+
+
+
 
 
 
