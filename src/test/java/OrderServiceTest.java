@@ -2,6 +2,11 @@ import TestingLab.order.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -19,6 +24,9 @@ public class OrderServiceTest {
     NotificationService notificationService;
 
     private OrderService orderService;
+
+    @Captor
+    ArgumentCaptor<Order> captor;
 
     // On construit OrderService nous-mêmes avec le constructeur :
     //   c'est plus clair que @InjectMocks
@@ -54,6 +62,9 @@ public class OrderServiceTest {
     }
 
 
+
+
+
     @Test
     void shouldRejectOrderAndNotSaveWhenPaymentIsRefused(){
         when(paymentGateway.charge("sara@gmail.com",100.0)).thenReturn(false);
@@ -71,6 +82,53 @@ public class OrderServiceTest {
     }
 
 
+
+    //Captor with argument captor
+    @Test
+    void shouldSaveOrderWithPaidStatus(){
+        when(paymentGateway.charge("sara@gmail.com",100.0)).thenReturn(true);
+        orderService.placeOder("sara@gmail.com",100.0);
+        verify(orderRepository).save(captor.capture());
+        Order savedOrder=captor.getValue();
+        assertThat(savedOrder.getStatus()).isEqualTo(OrderStatus.PAID);
+        assertThat(savedOrder.getCustomerEmail()).isEqualTo("sara@gmail.com");
+        assertThat(savedOrder.getAmount()).isEqualTo(100.0);
+
+    }
+
+
+    @Test
+    void shouldChargeCustomerWithExactAmount(){
+        when(paymentGateway.charge("sara@gmail.com",188.9)).thenReturn(true);
+        Order order=orderService.placeOder("sara@gmail.com",188.9);
+        verify(orderRepository).save(order);
+        assertThat(order.getAmount()).isEqualTo(188.9);
+        assertThat(order.getCustomerEmail()).contains("sara");
+
+
+    }
+
+
+
+    @Test
+    void shouldChargeBeforeSavingOrder(){
+        when(paymentGateway.charge("sara@gmail.com",188.9)).thenReturn(true);
+        Order order=orderService.placeOder("sara@gmail.com",188.9);
+
+        InOrder inOrder=inOrder(paymentGateway,orderRepository);
+        inOrder.verify(paymentGateway).charge("sara@gmail.com",188.9);
+        inOrder.verify(orderRepository).save(order);
+    }
+
+
+    @ParameterizedTest
+    @ValueSource(doubles = {0, -1, -100.5})
+    void shouldRejectNonPositiveAmounts(double amount) {
+        assertThatThrownBy(() -> orderService.placeOder("sara@mail.com", amount))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verifyNoInteractions(paymentGateway);
+    }
 
 
 
